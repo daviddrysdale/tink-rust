@@ -1,0 +1,29 @@
+[package]
+name = "tink-signature-fuzz"
+version = "0.0.0"
+authors = ["Automatically generated"]
+publish = false
+edition = "2018"
+
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+libfuzzer-sys = "0.3"
+tink = "0.1.0"
+
+[dependencies.tink-signature]
+path = ".."
+
+[patch.crates-io]
+tink = { path = "../../tink" }
+
+# Prevent this from interfering with workspaces
+[workspace]
+members = ["."]
+
+[[bin]]
+name = "fuzz_ecdsa_signature"
+path = "fuzz_targets/fuzz_ecdsa_signature.rs"
+test = false
+doc = false
