@@ -1,3 +1,7 @@
 target
 upstream
 .DS_Store
+bazel-bin
+bazel-out
+bazel-testlogs
+bazel-tink-rust

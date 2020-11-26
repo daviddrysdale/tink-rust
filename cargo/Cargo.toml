@@ -1,0 +1,29 @@
+[package]
+name = "cargo_under_bazel"
+version = "0.0.0"
+
+# Mandatory (or Cargo tooling is unhappy)
+[lib]
+path = "fake_lib.rs"
+
+[dependencies]
+base64 = "^0.12"
+digest = "^0.9"
+hkdf = "^0.9"
+lazy_static = "^1.4"
+prost = "^0.6.1"
+rand = "^0.7"
+serde = "^1.0.116"
+serde_json = "^1.0.58"
+sha-1 = "^0.9.1"
+sha2 = "^0.9.1"
+subtle = "^2.3"
+
+[package.metadata.raze]
+genmode = "Remote"
+# The WORKSPACE relative path to the Cargo.toml working directory.
+workspace_path = "//cargo"
+# The target to generate BUILD rules for.
+target = "x86_64-unknown-linux-gnu"
+
+[workspace]
