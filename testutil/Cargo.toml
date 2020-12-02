@@ -7,7 +7,7 @@ license = "Apache-2.0"
 
 [dependencies]
 ed25519-dalek = "^1.0.1"
-elliptic-curve = "^0.6.2"
+elliptic-curve = "^0.6.6"
 generic-array = "^0.14.4"
 hex = "^0.4.2"
 p256 = { version = "^0.5", features = ["ecdsa"] }
