@@ -516,7 +516,7 @@ version = "0.8.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "87bf8bfb05ea8a6f74ddf48c7d1774851ba77bbe51ac984fdfa6c30310e1ff5f"
 dependencies = [
- "elliptic-curve",
+ "elliptic-curve 0.6.6",
  "hmac 0.9.0",
  "signature",
 ]
@@ -552,9 +552,9 @@ checksum = "e78d4f1cc4ae33bbfc157ed5d5a5ef3bc29227303d595861deb238fcec4e9457"
 
 [[package]]
 name = "elliptic-curve"
-version = "0.6.2"
+version = "0.6.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "82e7e174baa250269c92f2e0d59abaeb14c7d8072abd130dee996cc61141825a"
+checksum = "396db09c483e7fca5d4fdb9112685632b3e76c9a607a2649c1bf904404a01366"
 dependencies = [
  "bitvec",
  "digest",
@@ -564,6 +564,20 @@ dependencies = [
  "rand_core",
  "subtle",
  "zeroize",
+]
+
+[[package]]
+name = "elliptic-curve"
+version = "0.7.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "64b8d753346ae41b448a0a97f5d5cbe787a05ee1bda63d629def34c679eaa0d6"
+dependencies = [
+ "bitvec",
+ "ff",
+ "generic-array",
+ "group",
+ "rand_core",
+ "subtle",
 ]
 
 [[package]]
@@ -1250,7 +1264,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1909a5a44a469f7d21c8dec2c634721ba15379b6cad80040d16abfaa8609b37c"
 dependencies = [
  "ecdsa",
- "elliptic-curve",
+ "elliptic-curve 0.6.6",
  "sha2",
 ]
 
@@ -2194,7 +2208,7 @@ version = "0.1.0"
 dependencies = [
  "base64",
  "ed25519-dalek",
- "elliptic-curve",
+ "elliptic-curve 0.7.0",
  "generic-array",
  "hex",
  "p256",
@@ -2233,7 +2247,7 @@ name = "tink-testutil"
 version = "0.1.0"
 dependencies = [
  "ed25519-dalek",
- "elliptic-curve",
+ "elliptic-curve 0.7.0",
  "generic-array",
  "hex",
  "p256",
