@@ -12,7 +12,7 @@ categories = ["cryptography"]
 [dependencies]
 base64 = "^0.12"
 google-cloudkms1 = "^1.0.14"
-hyper = "^0.10.16"
+hyper = "^0.13.9"
 hyper-rustls = " ^0.6"
 serde_json = "^1.0.60"
 tink-core = "^0.1"
