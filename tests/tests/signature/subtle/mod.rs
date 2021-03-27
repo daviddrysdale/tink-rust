@@ -17,6 +17,7 @@
 mod ecdsa_signer_verifier_test;
 mod ecdsa_test;
 mod ed25519_signer_verifier_test;
+mod rsa_test;
 
 #[test]
 fn test_element_from_padded_slice() {

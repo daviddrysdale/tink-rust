@@ -26,3 +26,5 @@ mod ed25519_signer;
 pub use ed25519_signer::*;
 mod ed25519_verifier;
 pub use ed25519_verifier::*;
+mod rsa;
+pub use self::rsa::*;
