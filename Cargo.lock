@@ -360,6 +360,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "crypto-bigint"
+version = "0.2.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b32a398eb1ccfbe7e4f452bc749c44d38dd732e9a253f19da224c416f00ee7f4"
+dependencies = [
+ "generic-array",
+ "rand_core 0.6.2",
+ "subtle",
+]
+
+[[package]]
 name = "crypto-mac"
 version = "0.11.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -443,6 +454,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "der"
+version = "0.4.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "31e21d2d0f22cde6e88694108429775c0219760a07779bf96503b434a03d7412"
+
+[[package]]
 name = "digest"
 version = "0.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -478,9 +495,20 @@ version = "0.11.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "34d33b390ab82f2e1481e331dbd0530895640179d2128ef9a79cc690b78d1eba"
 dependencies = [
- "der",
- "elliptic-curve",
+ "der 0.3.4",
+ "elliptic-curve 0.9.12",
  "hmac",
+ "signature",
+]
+
+[[package]]
+name = "ecdsa"
+version = "0.12.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "43ee23aa5b4f68c7a092b5c3beb25f50c406adc75e2363634f242f28ab255372"
+dependencies = [
+ "der 0.4.1",
+ "elliptic-curve 0.10.5",
  "signature",
 ]
 
@@ -527,6 +555,18 @@ dependencies = [
  "rand_core 0.6.2",
  "subtle",
  "zeroize",
+]
+
+[[package]]
+name = "elliptic-curve"
+version = "0.10.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "069397e10739989e400628cbc0556a817a8a64119d7a2315767f4456e1332c23"
+dependencies = [
+ "crypto-bigint",
+ "generic-array",
+ "rand_core 0.6.2",
+ "subtle",
 ]
 
 [[package]]
@@ -1219,8 +1259,8 @@ version = "0.8.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2f05f5287453297c4c16af5e2b04df8fd2a3008d70f252729650bc6d7ace5844"
 dependencies = [
- "ecdsa",
- "elliptic-curve",
+ "ecdsa 0.11.1",
+ "elliptic-curve 0.9.12",
  "sha2",
 ]
 
@@ -1304,7 +1344,7 @@ version = "0.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b813f58dc6e5d1820868a3c3df3a7ae7852aa2d3d18e98f0d6b20ddd01fe25d7"
 dependencies = [
- "der",
+ "der 0.3.4",
  "spki",
 ]
 
@@ -1933,7 +1973,7 @@ version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9dae7e047abc519c96350e9484a96c6bf1492348af912fd3446dd2dc323f6268"
 dependencies = [
- "der",
+ "der 0.3.4",
 ]
 
 [[package]]
@@ -2182,7 +2222,7 @@ dependencies = [
 name = "tink-signature"
 version = "0.2.0"
 dependencies = [
- "ecdsa",
+ "ecdsa 0.12.4",
  "ed25519-dalek",
  "generic-array",
  "p256",
