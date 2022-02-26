@@ -67,7 +67,21 @@ impl GcpAead {
         key_uri: &str,
         sa_key: &Option<yup_oauth2::ServiceAccountKey>,
     ) -> Result<GcpAead, TinkError> {
-        let https = HttpsConnector::with_native_roots();
+        GcpAead::new_with_config(key_uri, sa_key, None)
+    }
+
+    pub fn new_with_config(
+        key_uri: &str,
+        sa_key: &Option<yup_oauth2::ServiceAccountKey>,
+        config: Option<crate::rustls::ClientConfig>,
+    ) -> Result<GcpAead, TinkError> {
+        let https = if let Some(config) = config {
+            let mut http = hyper::client::connect::HttpConnector::new();
+            http.enforce_http(false);
+            HttpsConnector::from((http, config))
+        } else {
+            HttpsConnector::with_native_roots()
+        };
         let client = hyper::Client::builder().build::<_, hyper::Body>(https);
         let runtime = tokio::runtime::Builder::new_current_thread()
             .enable_all()

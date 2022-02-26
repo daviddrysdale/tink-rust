@@ -2134,6 +2134,7 @@ dependencies = [
  "hyper-rustls",
  "lazy_static",
  "percent-encoding",
+ "rustls",
  "serde",
  "serde_json",
  "tink-core",

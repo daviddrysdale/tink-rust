@@ -26,12 +26,22 @@ pub const GCP_PREFIX: &str = "gcp-kms://";
 pub struct GcpClient {
     key_uri_prefix: String,
     sa_key: Option<yup_oauth2::ServiceAccountKey>,
+    client_config: Option<crate::rustls::ClientConfig>,
 }
 
 impl GcpClient {
     /// Return a new GCP KMS client which will use default credentials to handle keys with
     /// `uri_prefix` prefix. `uri_prefix` must have the following format: `gcp-kms://[:path]`.
     pub fn new(uri_prefix: &str) -> Result<GcpClient, TinkError> {
+        GcpClient::new_with_config(uri_prefix, None)
+    }
+
+    /// Return a new GCP KMS client using the provided [`ClientConfig`].
+    /// It will use default credentials to handle keys with `uri_prefix` prefix.
+    pub fn new_with_config(
+        uri_prefix: &str,
+        config: Option<crate::rustls::ClientConfig>,
+    ) -> Result<GcpClient, TinkError> {
         if !uri_prefix.to_lowercase().starts_with(GCP_PREFIX) {
             return Err(format!("uri_prefix must start with {}", GCP_PREFIX).into());
         }
@@ -39,6 +49,7 @@ impl GcpClient {
         Ok(GcpClient {
             key_uri_prefix: uri_prefix.to_string(),
             sa_key: None,
+            client_config: config,
         })
     }
 
@@ -64,6 +75,7 @@ impl GcpClient {
         Ok(GcpClient {
             key_uri_prefix: uri_prefix.to_string(),
             sa_key: Some(sa_key),
+            client_config: None,
         })
     }
 }
@@ -81,6 +93,10 @@ impl tink_core::registry::KmsClient for GcpClient {
         } else {
             key_uri
         };
-        Ok(Box::new(crate::GcpAead::new(uri, &self.sa_key)?))
+        Ok(Box::new(crate::GcpAead::new_with_config(
+            uri,
+            &self.sa_key,
+            self.client_config.clone(),
+        )?))
     }
 }

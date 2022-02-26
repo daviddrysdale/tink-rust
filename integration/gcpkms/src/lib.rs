@@ -22,6 +22,9 @@ pub use gcp_kms_client::*;
 mod gcp_kms_aead;
 pub use gcp_kms_aead::*;
 
+/// Re-export of the `rustls` crate version used for transport.
+pub use rustls;
+
 /// The [upstream Tink](https://github.com/google/tink) version that this Rust
 /// port is based on.
 pub const UPSTREAM_VERSION: &str = "1.6.0";
