@@ -117,6 +117,65 @@ pub mod keyset_from_json_response {
         Err(::prost::alloc::string::String),
     }
 }
+/// Copy of google.protobuf.BytesValue
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct BytesValue {
+    /// The bytes value.
+    #[prost(bytes = "vec", tag = "1")]
+    pub value: ::prost::alloc::vec::Vec<u8>,
+}
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct KeysetReadEncryptedRequest {
+    #[prost(bytes = "vec", tag = "1")]
+    pub encrypted_keyset: ::prost::alloc::vec::Vec<u8>,
+    /// serialized google.crypto.tink.Keyset.
+    #[prost(bytes = "vec", tag = "2")]
+    pub master_keyset: ::prost::alloc::vec::Vec<u8>,
+    #[prost(message, optional, tag = "3")]
+    pub associated_data: ::core::option::Option<BytesValue>,
+}
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct KeysetReadEncryptedResponse {
+    #[prost(oneof = "keyset_read_encrypted_response::Result", tags = "1, 2")]
+    pub result: ::core::option::Option<keyset_read_encrypted_response::Result>,
+}
+/// Nested message and enum types in `KeysetReadEncryptedResponse`.
+pub mod keyset_read_encrypted_response {
+    #[derive(Clone, PartialEq, ::prost::Oneof)]
+    pub enum Result {
+        /// serialized google.crypto.tink.Keyset.
+        #[prost(bytes, tag = "1")]
+        Keyset(::prost::alloc::vec::Vec<u8>),
+        #[prost(string, tag = "2")]
+        Err(::prost::alloc::string::String),
+    }
+}
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct KeysetWriteEncryptedRequest {
+    /// serialized google.crypto.tink.Keyset.
+    #[prost(bytes = "vec", tag = "1")]
+    pub keyset: ::prost::alloc::vec::Vec<u8>,
+    /// serialized google.crypto.tink.Keyset.
+    #[prost(bytes = "vec", tag = "2")]
+    pub master_keyset: ::prost::alloc::vec::Vec<u8>,
+    #[prost(message, optional, tag = "3")]
+    pub associated_data: ::core::option::Option<BytesValue>,
+}
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct KeysetWriteEncryptedResponse {
+    #[prost(oneof = "keyset_write_encrypted_response::Result", tags = "1, 2")]
+    pub result: ::core::option::Option<keyset_write_encrypted_response::Result>,
+}
+/// Nested message and enum types in `KeysetWriteEncryptedResponse`.
+pub mod keyset_write_encrypted_response {
+    #[derive(Clone, PartialEq, ::prost::Oneof)]
+    pub enum Result {
+        #[prost(bytes, tag = "1")]
+        EncryptedKeyset(::prost::alloc::vec::Vec<u8>),
+        #[prost(string, tag = "2")]
+        Err(::prost::alloc::string::String),
+    }
+}
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct AeadEncryptRequest {
     /// serialized google.crypto.tink.Keyset.
@@ -450,7 +509,7 @@ pub mod prf_set_compute_response {
 }
 // TODO(b/179867503): Remove these copies of Timestamp, Duration and StringValue
 
-/// Copied from timestamp.proto
+/// Copy of google.protobuf.Timestamp
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct Timestamp {
     /// Represents seconds of UTC time since Unix epoch
@@ -465,7 +524,7 @@ pub struct Timestamp {
     #[prost(int32, tag = "2")]
     pub nanos: i32,
 }
-/// Copied from duration.proto
+/// Copy of google.protobuf.Duration
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct Duration {
     /// Signed seconds of the span of time. Must be from -315,576,000,000
@@ -482,7 +541,7 @@ pub struct Duration {
     #[prost(int32, tag = "2")]
     pub nanos: i32,
 }
-/// Copied from wrappers.proto
+/// Copy of google.protobuf.StringValue
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct StringValue {
     /// The string value.
@@ -866,6 +925,40 @@ pub mod keyset_client {
             })?;
             let codec = tonic::codec::ProstCodec::default();
             let path = http::uri::PathAndQuery::from_static("/tink_testing_api.Keyset/FromJson");
+            self.inner.unary(request.into_request(), path, codec).await
+        }
+        /// Reads an encrypted keyset using KeysetHandle.read() or
+        /// KeysetHandle.readWithAssociatedData() and the BinaryKeysetReader.
+        pub async fn read_encrypted(
+            &mut self,
+            request: impl tonic::IntoRequest<super::KeysetReadEncryptedRequest>,
+        ) -> Result<tonic::Response<super::KeysetReadEncryptedResponse>, tonic::Status> {
+            self.inner.ready().await.map_err(|e| {
+                tonic::Status::new(
+                    tonic::Code::Unknown,
+                    format!("Service was not ready: {}", e.into()),
+                )
+            })?;
+            let codec = tonic::codec::ProstCodec::default();
+            let path =
+                http::uri::PathAndQuery::from_static("/tink_testing_api.Keyset/ReadEncrypted");
+            self.inner.unary(request.into_request(), path, codec).await
+        }
+        /// Writes an encrypted keyset using KeysetHandle.write() or
+        /// KeysetHandle.writeWithAssociatedData() and the BinaryKeysetWriter.
+        pub async fn write_encrypted(
+            &mut self,
+            request: impl tonic::IntoRequest<super::KeysetWriteEncryptedRequest>,
+        ) -> Result<tonic::Response<super::KeysetWriteEncryptedResponse>, tonic::Status> {
+            self.inner.ready().await.map_err(|e| {
+                tonic::Status::new(
+                    tonic::Code::Unknown,
+                    format!("Service was not ready: {}", e.into()),
+                )
+            })?;
+            let codec = tonic::codec::ProstCodec::default();
+            let path =
+                http::uri::PathAndQuery::from_static("/tink_testing_api.Keyset/WriteEncrypted");
             self.inner.unary(request.into_request(), path, codec).await
         }
     }
@@ -1833,6 +1926,18 @@ pub mod keyset_server {
             &self,
             request: tonic::Request<super::KeysetFromJsonRequest>,
         ) -> Result<tonic::Response<super::KeysetFromJsonResponse>, tonic::Status>;
+        /// Reads an encrypted keyset using KeysetHandle.read() or
+        /// KeysetHandle.readWithAssociatedData() and the BinaryKeysetReader.
+        async fn read_encrypted(
+            &self,
+            request: tonic::Request<super::KeysetReadEncryptedRequest>,
+        ) -> Result<tonic::Response<super::KeysetReadEncryptedResponse>, tonic::Status>;
+        /// Writes an encrypted keyset using KeysetHandle.write() or
+        /// KeysetHandle.writeWithAssociatedData() and the BinaryKeysetWriter.
+        async fn write_encrypted(
+            &self,
+            request: tonic::Request<super::KeysetWriteEncryptedRequest>,
+        ) -> Result<tonic::Response<super::KeysetWriteEncryptedResponse>, tonic::Status>;
     }
     /// Service for Keyset operations.
     #[derive(Debug)]
@@ -2019,6 +2124,72 @@ pub mod keyset_server {
                     let fut = async move {
                         let inner = inner.0;
                         let method = FromJsonSvc(inner);
+                        let codec = tonic::codec::ProstCodec::default();
+                        let mut grpc = tonic::server::Grpc::new(codec).apply_compression_config(
+                            accept_compression_encodings,
+                            send_compression_encodings,
+                        );
+                        let res = grpc.unary(method, req).await;
+                        Ok(res)
+                    };
+                    Box::pin(fut)
+                }
+                "/tink_testing_api.Keyset/ReadEncrypted" => {
+                    #[allow(non_camel_case_types)]
+                    struct ReadEncryptedSvc<T: Keyset>(pub Arc<T>);
+                    impl<T: Keyset> tonic::server::UnaryService<super::KeysetReadEncryptedRequest>
+                        for ReadEncryptedSvc<T>
+                    {
+                        type Response = super::KeysetReadEncryptedResponse;
+                        type Future = BoxFuture<tonic::Response<Self::Response>, tonic::Status>;
+                        fn call(
+                            &mut self,
+                            request: tonic::Request<super::KeysetReadEncryptedRequest>,
+                        ) -> Self::Future {
+                            let inner = self.0.clone();
+                            let fut = async move { (*inner).read_encrypted(request).await };
+                            Box::pin(fut)
+                        }
+                    }
+                    let accept_compression_encodings = self.accept_compression_encodings;
+                    let send_compression_encodings = self.send_compression_encodings;
+                    let inner = self.inner.clone();
+                    let fut = async move {
+                        let inner = inner.0;
+                        let method = ReadEncryptedSvc(inner);
+                        let codec = tonic::codec::ProstCodec::default();
+                        let mut grpc = tonic::server::Grpc::new(codec).apply_compression_config(
+                            accept_compression_encodings,
+                            send_compression_encodings,
+                        );
+                        let res = grpc.unary(method, req).await;
+                        Ok(res)
+                    };
+                    Box::pin(fut)
+                }
+                "/tink_testing_api.Keyset/WriteEncrypted" => {
+                    #[allow(non_camel_case_types)]
+                    struct WriteEncryptedSvc<T: Keyset>(pub Arc<T>);
+                    impl<T: Keyset> tonic::server::UnaryService<super::KeysetWriteEncryptedRequest>
+                        for WriteEncryptedSvc<T>
+                    {
+                        type Response = super::KeysetWriteEncryptedResponse;
+                        type Future = BoxFuture<tonic::Response<Self::Response>, tonic::Status>;
+                        fn call(
+                            &mut self,
+                            request: tonic::Request<super::KeysetWriteEncryptedRequest>,
+                        ) -> Self::Future {
+                            let inner = self.0.clone();
+                            let fut = async move { (*inner).write_encrypted(request).await };
+                            Box::pin(fut)
+                        }
+                    }
+                    let accept_compression_encodings = self.accept_compression_encodings;
+                    let send_compression_encodings = self.send_compression_encodings;
+                    let inner = self.inner.clone();
+                    let fut = async move {
+                        let inner = inner.0;
+                        let method = WriteEncryptedSvc(inner);
                         let codec = tonic::codec::ProstCodec::default();
                         let mut grpc = tonic::server::Grpc::new(codec).apply_compression_config(
                             accept_compression_encodings,

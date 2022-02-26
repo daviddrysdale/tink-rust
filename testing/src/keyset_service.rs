@@ -144,4 +144,84 @@ impl proto::keyset_server::Keyset for KeysetServerImpl {
             }),
         }))
     }
+
+    async fn read_encrypted(
+        &self,
+        request: tonic::Request<proto::KeysetReadEncryptedRequest>,
+    ) -> Result<tonic::Response<proto::KeysetReadEncryptedResponse>, tonic::Status> {
+        let req = request.into_inner(); // discard metadata
+        let closure = move || -> Result<_, TinkError> {
+            let cursor = std::io::Cursor::new(req.master_keyset);
+            let mut reader = tink_core::keyset::BinaryReader::new(cursor);
+            let handle = tink_core::keyset::insecure::read(&mut reader)
+                .map_err(|e| wrap_err("read failed", e))?;
+            let master_aead = tink_aead::new(&handle)?;
+
+            let cursor = std::io::Cursor::new(req.encrypted_keyset);
+            let mut reader = tink_core::keyset::BinaryReader::new(cursor);
+
+            let handle = if let Some(aad) = req.associated_data {
+                tink_core::keyset::Handle::read_with_associated_data(
+                    &mut reader,
+                    master_aead,
+                    &aad.value,
+                )
+            } else {
+                tink_core::keyset::Handle::read(&mut reader, master_aead)
+            }?;
+
+            let mut buf = Vec::new();
+            {
+                let mut writer = tink_core::keyset::BinaryWriter::new(&mut buf);
+                tink_core::keyset::insecure::write(&handle, &mut writer)
+                    .map_err(|e| wrap_err("write failed", e))?;
+            }
+            Ok(buf)
+        };
+        Ok(tonic::Response::new(proto::KeysetReadEncryptedResponse {
+            result: Some(match closure() {
+                Ok(buf) => proto::keyset_read_encrypted_response::Result::Keyset(buf),
+                Err(e) => proto::keyset_read_encrypted_response::Result::Err(format!("{:?}", e)),
+            }),
+        }))
+    }
+    async fn write_encrypted(
+        &self,
+        request: tonic::Request<proto::KeysetWriteEncryptedRequest>,
+    ) -> Result<tonic::Response<proto::KeysetWriteEncryptedResponse>, tonic::Status> {
+        let req = request.into_inner(); // discard metadata
+        let closure = move || -> Result<_, TinkError> {
+            let cursor = std::io::Cursor::new(req.master_keyset);
+            let mut reader = tink_core::keyset::BinaryReader::new(cursor);
+            let handle = tink_core::keyset::insecure::read(&mut reader)
+                .map_err(|e| wrap_err("read failed", e))?;
+            let master_aead = tink_aead::new(&handle)?;
+
+            let cursor = std::io::Cursor::new(req.keyset);
+            let mut reader = tink_core::keyset::BinaryReader::new(cursor);
+            let handle = tink_core::keyset::insecure::read(&mut reader)
+                .map_err(|e| wrap_err("read failed", e))?;
+
+            let mut buf = Vec::new();
+            {
+                let mut writer = tink_core::keyset::BinaryWriter::new(&mut buf);
+                if let Some(aad) = req.associated_data {
+                    handle
+                        .write_with_associated_data(&mut writer, master_aead, &aad.value)
+                        .map_err(|e| wrap_err("write failed", e))?;
+                } else {
+                    handle
+                        .write(&mut writer, master_aead)
+                        .map_err(|e| wrap_err("write failed", e))?;
+                }
+            }
+            Ok(buf)
+        };
+        Ok(tonic::Response::new(proto::KeysetWriteEncryptedResponse {
+            result: Some(match closure() {
+                Ok(buf) => proto::keyset_write_encrypted_response::Result::EncryptedKeyset(buf),
+                Err(e) => proto::keyset_write_encrypted_response::Result::Err(format!("{:?}", e)),
+            }),
+        }))
+    }
 }
