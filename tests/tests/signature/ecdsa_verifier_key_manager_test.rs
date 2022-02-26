@@ -40,13 +40,26 @@ fn test_ecdsa_verify_get_primitive_basic() {
 }
 
 #[test]
+fn test_ecdsa_verify_with_invalid_public_key_fails_creating_primitive() {
+    tink_signature::init();
+    let km = tink_core::registry::get_key_manager(tink_tests::ECDSA_VERIFIER_TYPE_URL)
+        .expect("cannot obtain EcdsaVerifier key manager");
+    let mut pub_key =
+        tink_tests::new_random_ecdsa_public_key(HashType::Sha256, EllipticCurveType::NistP256);
+    pub_key.x = vec![0; 32];
+    pub_key.y = vec![0; 32];
+    let serialized_pub_key = tink_tests::proto_encode(&pub_key);
+    assert!(km.primitive(&serialized_pub_key).is_err());
+}
+
+#[test]
 fn test_ecdsa_verify_get_primitive_with_invalid_input() {
     tink_signature::init();
     let test_params = gen_invalid_ecdsa_params();
     let km = tink_core::registry::get_key_manager(tink_tests::ECDSA_VERIFIER_TYPE_URL)
         .expect("cannot obtain EcdsaVerifier key manager");
     for (i, test_param) in test_params.iter().enumerate() {
-        let serialized_key = tink_tests::proto_encode(&tink_tests::new_random_ecdsa_private_key(
+        let serialized_key = tink_tests::proto_encode(&tink_tests::new_random_ecdsa_public_key(
             test_param.hash_type,
             test_param.curve,
         ));
@@ -54,6 +67,21 @@ fn test_ecdsa_verify_get_primitive_with_invalid_input() {
             km.primitive(&serialized_key).is_err(),
             "expect an error in test case {}",
             i
+        );
+    }
+    for (i, test_param) in gen_unknown_ecdsa_params().iter().enumerate() {
+        let mut k =
+            tink_tests::new_random_ecdsa_public_key(HashType::Sha256, EllipticCurveType::NistP256);
+        let params = k.params.as_mut().unwrap();
+        params.curve = test_param.curve as i32;
+        params.hash_type = test_param.hash_type as i32;
+        let serialized_key = tink_tests::proto_encode(&k);
+        assert!(
+            km.primitive(&serialized_key).is_err(),
+            "expect an error in test case {} with params: (curve = {:?}, hash = {:?}",
+            i,
+            test_param.curve,
+            test_param.hash_type
         );
     }
     // invalid version

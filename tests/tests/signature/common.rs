@@ -44,6 +44,19 @@ pub fn gen_valid_ecdsa_params() -> Vec<EcdsaParams> {
     ]
 }
 
+pub fn gen_unknown_ecdsa_params() -> Vec<EcdsaParams> {
+    vec![
+        EcdsaParams {
+            hash_type: HashType::UnknownHash,
+            curve: EllipticCurveType::NistP256,
+        },
+        EcdsaParams {
+            hash_type: HashType::Sha256,
+            curve: EllipticCurveType::UnknownCurve,
+        },
+    ]
+}
+
 pub fn gen_invalid_ecdsa_params() -> Vec<EcdsaParams> {
     vec![
         EcdsaParams {

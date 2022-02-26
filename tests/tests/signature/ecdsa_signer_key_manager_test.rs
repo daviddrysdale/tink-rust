@@ -60,6 +60,24 @@ fn test_ecdsa_sign_get_primitive_with_invalid_input() {
             i
         );
     }
+
+    for (i, test_param) in gen_unknown_ecdsa_params().iter().enumerate() {
+        let mut k =
+            tink_tests::new_random_ecdsa_private_key(HashType::Sha256, EllipticCurveType::NistP256);
+        let pub_key = k.public_key.as_mut().unwrap();
+        let params = pub_key.params.as_mut().unwrap();
+        params.curve = test_param.curve as i32;
+        params.hash_type = test_param.hash_type as i32;
+        let serialized_key = tink_tests::proto_encode(&k);
+        assert!(
+            km.primitive(&serialized_key).is_err(),
+            "expect an error in test case {} with params: (curve = {:?}, hash = {:?}",
+            i,
+            test_param.curve,
+            test_param.hash_type
+        );
+    }
+
     // invalid version
     let mut key =
         tink_tests::new_random_ecdsa_private_key(HashType::Sha256, EllipticCurveType::NistP256);

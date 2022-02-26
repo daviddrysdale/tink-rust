@@ -56,6 +56,18 @@ fn gen_ecdsa_invalid_params() -> Vec<ParamsTestEcdsa> {
             curve: EllipticCurveType::NistP256,
             encoding: EcdsaSignatureEncoding::UnknownEncoding,
         },
+        // invalid hash
+        ParamsTestEcdsa {
+            hash: HashType::Sha1,
+            curve: EllipticCurveType::NistP256,
+            encoding: EcdsaSignatureEncoding::IeeeP1363,
+        },
+        // invalid curve
+        ParamsTestEcdsa {
+            hash: HashType::Sha256,
+            curve: EllipticCurveType::UnknownCurve,
+            encoding: EcdsaSignatureEncoding::IeeeP1363,
+        },
     ];
     for encoding in encodings {
         // invalid curve

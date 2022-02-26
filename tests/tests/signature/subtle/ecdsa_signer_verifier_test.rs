@@ -121,6 +121,18 @@ fn test_ecdsa_invalid_signer_params() {
 }
 
 #[test]
+fn test_ecdsa_invalid_public_key() {
+    assert!(subtle::EcdsaVerifier::new(
+        HashType::Sha256,
+        EllipticCurveType::NistP256,
+        EcdsaSignatureEncoding::IeeeP1363,
+        &[0; 32],
+        &[0; 32]
+    )
+    .is_err());
+}
+
+#[test]
 fn test_ecdsa_invalid_verifier_params() {
     let mut csprng = p256::elliptic_curve::rand_core::OsRng {};
     let secret_key = p256::ecdsa::SigningKey::random(&mut csprng);
