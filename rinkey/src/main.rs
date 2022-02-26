@@ -414,7 +414,8 @@ fn rotate_keyset(opts: AddRotateOptions) {
     let wrap_opts = opts.in_opts.wrap_opts.clone();
     let mut mgr = get_manager(opts.in_opts);
     let template = opts.key_template.0;
-    mgr.rotate(&template).expect("Invalid key template");
+    mgr.add(&template, /* primary= */ true)
+        .expect("Invalid key template");
     put_manager(opts.out_opts, wrap_opts, mgr);
 }
 

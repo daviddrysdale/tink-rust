@@ -45,6 +45,12 @@ impl Manager {
     /// Generate a fresh key using the given key template and set the new key as the primary key.
     /// The key that was primary prior to rotation remains `Enabled`. Returns the key ID of the
     /// new primary key.
+    ///
+    /// Deprecated: please use add(as_primary=false) instead. Rotate adds a new key and immediately
+    /// promotes it to primary. However, when performing keyset rotation, you almost never want
+    /// a newly added key to immediately be set as the primary key. Instead, you want to allow
+    /// sufficient time for key propagation to occur.
+    #[deprecated(since = "0.3.0", note = "Please use .add(&kt, true) instead.")]
     pub fn rotate(&mut self, kt: &tink_proto::KeyTemplate) -> Result<KeyId, TinkError> {
         self.add(kt, true)
     }
@@ -79,14 +85,14 @@ impl Manager {
         Ok(key_id)
     }
 
-    /// Create a new [`Handle`](super::Handle) for the managed keyset.
+    /// Create a new [`Handle`](super::Handle) for the managed keyset. copying its current state.
     pub fn handle(&self) -> Result<super::Handle, TinkError> {
         super::Handle::from_keyset(self.ks.clone())
     }
 
-    /// Sets the status of the specified key to [`KeyStatusType::Enabled`].  Succeeds only if before
-    /// the call the specified key has status [`KeyStatusType::Disabled`] or
-    /// [`KeyStatusType::Enabled`].
+    /// Sets the status of the key with the specified `key_id` to [`KeyStatusType::Enabled`].
+    /// Succeeds only if before the call the specified key has status
+    /// [`KeyStatusType::Disabled`] or [`KeyStatusType::Enabled`].
     pub fn enable(&mut self, key_id: KeyId) -> Result<(), TinkError> {
         for key in &mut self.ks.key {
             if key.key_id == key_id {
@@ -131,9 +137,9 @@ impl Manager {
         Err(format!("Key {} not found", key_id).into())
     }
 
-    /// Sets the status of the specified key to [`KeyStatusType::Destroyed`], and removes the
-    /// corresponding key material, if any.  Succeeds only if before the call the specified key
-    /// is not primary and has status [`KeyStatusType::Disabled`], or
+    /// Sets the status of the key with the specified `key_id` to [`KeyStatusType::Destroyed`], and
+    /// removes the corresponding key material, if any.  Succeeds only if before the call the
+    /// specified key is not primary and has status [`KeyStatusType::Disabled`], or
     /// [`KeyStatusType::Enabled`], or [`KeyStatusType::Destroyed`].
     pub fn destroy(&mut self, key_id: KeyId) -> Result<(), TinkError> {
         if self.ks.primary_key_id == key_id {
@@ -160,8 +166,8 @@ impl Manager {
         Err(format!("Key {} not found", key_id).into())
     }
 
-    /// Removes the specifed key from the managed keyset.  Succeeds only if the specified key is not
-    /// primary.  After deletion the keyset contains one key fewer.
+    /// Removes the key with specifed `key_id` from the managed keyset.  Succeeds only if the
+    /// specified key is not primary.  After deletion the keyset contains one key fewer.
     pub fn delete(&mut self, key_id: KeyId) -> Result<(), TinkError> {
         if self.ks.primary_key_id == key_id {
             return Err(format!("Cannot delete primary key (key_id {})", key_id).into());
@@ -182,7 +188,8 @@ impl Manager {
         }
     }
 
-    /// Sets the specified key as the primary.  Succeeds only if the specified key is `Enabled`.
+    /// Sets the key with the specified `key_id` as the primary.  Succeeds only if the specified key
+    /// is `Enabled`.
     pub fn set_primary(&mut self, key_id: KeyId) -> Result<(), TinkError> {
         for key in &self.ks.key {
             if key.key_id == key_id {

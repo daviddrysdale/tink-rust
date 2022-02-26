@@ -30,7 +30,10 @@ fn main() -> Result<(), Box<dyn Error>> {
     let mut km = tink_core::keyset::Manager::new_from_handle(kh);
 
     // Rotate in a new primary key, and add an additional secondary key.
-    let key_id_a = km.rotate(&tink_aead::aes256_gcm_key_template())?;
+    let key_id_a = km.add(
+        &tink_aead::aes256_gcm_key_template(),
+        /* primary = */ true,
+    )?;
     let key_id_b = km.add(
         &tink_aead::aes256_gcm_key_template(),
         /* primary = */ false,

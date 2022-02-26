@@ -22,7 +22,7 @@ fn add_key_and_return_id(
     m: &mut tink_core::keyset::Manager,
     template: &tink_proto::KeyTemplate,
 ) -> Result<u32, TinkError> {
-    m.rotate(template)
+    m.add(template, /* primary= */ true)
         .map_err(|e| wrap_err("Could not add template", e))?;
     let h = m
         .handle()
@@ -136,7 +136,11 @@ fn test_non_raw_keys() {
     );
     let mut m = tink_core::keyset::Manager::new_from_handle(h);
     assert!(
-        m.rotate(&tink_prf::hmac_sha256_prf_key_template()).is_ok(),
+        m.add(
+            &tink_prf::hmac_sha256_prf_key_template(),
+            /* primary= */ true
+        )
+        .is_ok(),
         "Expected to be able to add keys to the keyset"
     );
     let h = m
@@ -162,7 +166,11 @@ fn test_non_prf_primitives() {
 
     let mut m = tink_core::keyset::Manager::new_from_handle(h);
     assert!(
-        m.rotate(&tink_prf::hmac_sha256_prf_key_template()).is_ok(),
+        m.add(
+            &tink_prf::hmac_sha256_prf_key_template(),
+            /* primary= */ true
+        )
+        .is_ok(),
         "Expected to be able to add keys to the keyset"
     );
     let h = m

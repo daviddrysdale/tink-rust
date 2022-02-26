@@ -663,7 +663,8 @@ pub fn new_aes_cmac_key_format(tag_size: u32) -> tink_proto::AesCmacKeyFormat {
 pub fn new_hmac_keyset_manager() -> tink_core::keyset::Manager {
     let mut ksm = tink_core::keyset::Manager::new();
     let kt = tink_mac::hmac_sha256_tag128_key_template();
-    ksm.rotate(&kt).expect("cannot rotate keyset manager");
+    ksm.add(&kt, /* primary= */ true)
+        .expect("cannot rotate keyset manager");
     ksm
 }
 

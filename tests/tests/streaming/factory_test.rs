@@ -79,8 +79,11 @@ fn test_factory_with_invalid_primitive_set_type() {
 
     // Now arrange a keyset where the primary key is correct but secondary key is not.
     let mut km = tink_core::keyset::Manager::new_from_handle(wrong_kh);
-    km.rotate(&tink_streaming_aead::aes128_gcm_hkdf_4kb_key_template())
-        .unwrap();
+    km.add(
+        &tink_streaming_aead::aes128_gcm_hkdf_4kb_key_template(),
+        /* primary= */ true,
+    )
+    .unwrap();
     let wronger_kh = km.handle().unwrap();
     tink_tests::expect_err(
         tink_streaming_aead::new(&wronger_kh),
@@ -114,7 +117,7 @@ fn test_key_rotation() {
     let kt_a = tink_streaming_aead::aes128_ctr_hmac_sha256_segment_4kb_key_template();
     let kt_b = tink_streaming_aead::aes256_ctr_hmac_sha256_segment_4kb_key_template();
     let mut ksm = tink_core::keyset::Manager::new();
-    let id_a = ksm.rotate(&kt_a).unwrap();
+    let id_a = ksm.add(&kt_a, /* primary= */ true).unwrap();
     let h1 = ksm.handle().unwrap();
     let id_b = ksm.add(&kt_b, /* primary= */ false).unwrap();
     let h2 = ksm.handle().unwrap();

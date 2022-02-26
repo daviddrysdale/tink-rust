@@ -48,8 +48,11 @@ fn test_aes_siv_primitive_with_wrong_primary_key() {
 
     // Build a keyset with a primary ECDSA key plus an AES-SIV key.
     let mut ksm = tink_core::keyset::Manager::new();
-    ksm.rotate(&tink_signature::ecdsa_p256_key_template())
-        .unwrap();
+    ksm.add(
+        &tink_signature::ecdsa_p256_key_template(),
+        /* primary= */ true,
+    )
+    .unwrap();
     ksm.add(
         &tink_daead::aes_siv_key_template(),
         /* primary= */ false,
@@ -68,7 +71,11 @@ fn test_aes_siv_primitive_with_wrong_later_key() {
 
     // Build a keyset with a primary AES-SIV key plus a later ECDSA key.
     let mut ksm = tink_core::keyset::Manager::new();
-    ksm.rotate(&tink_daead::aes_siv_key_template()).unwrap();
+    ksm.add(
+        &tink_daead::aes_siv_key_template(),
+        /* primary= */ true,
+    )
+    .unwrap();
     ksm.add(
         &tink_signature::ecdsa_p256_key_template(),
         /* primary= */ false,

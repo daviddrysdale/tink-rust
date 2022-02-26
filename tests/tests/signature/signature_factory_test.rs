@@ -215,8 +215,11 @@ fn test_factory_with_invalid_primitive_set_type() {
     // Now build an invalid keyset with heterogenous primitives: primary
     // is for signatures, secondary is not.
     let mut km = tink_core::keyset::Manager::new_from_handle(wrong_kh);
-    km.rotate(&tink_signature::ecdsa_p256_key_template())
-        .unwrap();
+    km.add(
+        &tink_signature::ecdsa_p256_key_template(),
+        /* primary= */ true,
+    )
+    .unwrap();
     let wronger_kh = km.handle().unwrap();
 
     tink_tests::expect_err(

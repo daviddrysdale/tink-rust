@@ -1,5 +1,9 @@
 # Change Log
 
+## 0.3.0 - TBD
+
+- Deprecate `tink_core::keyset::Manager::rotate` (prefer `Manager::add`).
+
 ## 0.2.3 - 2022-01-03
 
 - Add crate `README.md`.

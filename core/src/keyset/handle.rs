@@ -31,7 +31,7 @@ impl Handle {
     /// to the given [`KeyTemplate`](tink_proto::KeyTemplate).
     pub fn new(kt: &tink_proto::KeyTemplate) -> Result<Self, TinkError> {
         let mut ksm = super::Manager::new();
-        ksm.rotate(kt)
+        ksm.add(kt, /* set_primary= */ true)
             .map_err(|e| wrap_err("keyset::Handle: cannot generate new keyset", e))?;
         ksm.handle()
             .map_err(|e| wrap_err("keyset::Handle: cannot get keyset handle", e))

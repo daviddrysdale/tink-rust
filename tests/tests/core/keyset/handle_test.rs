@@ -358,8 +358,11 @@ fn test_handle_public_destroyed_key() {
     tink_signature::init();
 
     let mut ksm = tink_core::keyset::Manager::new();
-    ksm.rotate(&tink_signature::ecdsa_p256_key_template())
-        .unwrap();
+    ksm.add(
+        &tink_signature::ecdsa_p256_key_template(),
+        /* primary= */ true,
+    )
+    .unwrap();
     let key_id = ksm
         .add(
             &tink_signature::ecdsa_p256_key_template(),
