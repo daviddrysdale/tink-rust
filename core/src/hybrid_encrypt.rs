@@ -54,7 +54,7 @@
 /// - use `context_info` as "CtxInfo"-input for HKDF (if the implementation uses HKDF as key
 ///   derivation function, cf. [RFC 5869](https://tools.ietf.org/html/rfc5869)).
 pub trait HybridEncrypt: HybridEncryptBoxClone {
-    /// Encrypt `plaintext` binding `context_info` to the resulting
+    /// Encrypt `plaintext`, binding `context_info` to the resulting
     /// ciphertext. Returns resulting ciphertext.
     fn encrypt(&self, plaintext: &[u8], context_info: &[u8]) -> Result<Vec<u8>, crate::TinkError>;
 }

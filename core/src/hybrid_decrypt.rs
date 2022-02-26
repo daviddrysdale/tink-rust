@@ -54,7 +54,7 @@
 /// - use `context_info` as "CtxInfo"-input for HKDF (if the implementation uses HKDF as key
 ///   derivation function, cf. [RFC 5869](https://tools.ietf.org/html/rfc5869)).
 pub trait HybridDecrypt: HybridDecryptBoxClone {
-    /// Decrypt `ciphertext` verifying the integrity of `context_info`.
+    /// Decrypt `ciphertext`, verifying the integrity of `context_info`.
     /// Returns resulting plaintext
     fn decrypt(&self, ciphertext: &[u8], context_info: &[u8]) -> Result<Vec<u8>, crate::TinkError>;
 }
