@@ -191,8 +191,6 @@ pub struct AesEaxKey {
     #[prost(bytes="vec", tag="3")]
     pub key_value: ::prost::alloc::vec::Vec<u8>,
 }
-/// only allowing IV size in bytes = 12 and tag size in bytes = 16
-/// Thus, accept no params.
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct AesGcmKeyFormat {
     #[prost(uint32, tag="2")]
@@ -200,7 +198,39 @@ pub struct AesGcmKeyFormat {
     #[prost(uint32, tag="3")]
     pub version: u32,
 }
-/// key_type: type.googleapis.com/google.crypto.tink.AesGcmKey
+// key_type: type.googleapis.com/google.crypto.tink.AesGcmKey
+//
+// A AesGcmKey is an AEAD key. Mathematically, it represents the functions
+// Encrypt and Decrypt which we define in the following.
+//
+// First, Tink computes a "output prefix" OP by considering the
+// "OutputPrefixType" message in Keyset.Key and the ID of the key using the
+// Tink function "AEAD-OutputPrefix": (AesGcmKeys must always be stored in a
+// keyset).
+//
+// AEAD-OutputPrefix(output_prefix_type, id):
+//     if output_prefix_type == RAW:
+//       return "";
+//     if output_prefix_type == TINK:
+//       return 0x01 + BigEndian(id)
+//     if output_prefix_type == CRUNCHY:
+//       return 0x00 + BigEndian(id)
+//
+// Then, the function defined by this is defined as:
+// [GCM], Section 5.2.1:
+//  * "Encrypt" maps a plaintext P and associated data A to a ciphertext given
+//    by the concatenation OP || IV || C || T. In addition to [GCM], Tink
+//    has the following restriction: IV is a uniformly random initialization
+//    vector of length 12 bytes and T is restricted to 16 bytes.
+//
+//  * If OP matches the result of AEAD-OutputPrefix, then "Decrypt" maps the
+//    input OP || IV || C || T and A to the the output P in the manner as
+//    described in [GCM], Section 5.2.2. If OP does not match, then "Decrypt"
+//    returns an error.
+// [GCM]: NIST Special Publication 800-38D: Recommendation for Block Cipher
+// Modes of Operation: Galois/Counter Mode (GCM) and GMAC.
+// http://csrc.nist.gov/publications/nistpubs/800-38D/SP-800-38D.pdf.
+
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct AesGcmKey {
     #[prost(uint32, tag="1")]
