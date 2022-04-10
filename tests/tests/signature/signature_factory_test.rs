@@ -63,21 +63,22 @@ fn test_signer_verify_factory() {
         tink_signature::new_verifier(&pub_keyset_handle).expect("getting verify primitive failed");
     assert!(verifier.verify(&sig, &data).is_ok(), "verification failed");
 
-    // verify with random key should fail
-    let (_, random_pub) = new_ecdsa_keyset_keypair(
+    // verify with other key should fail
+    let (_, other_pub) = new_ecdsa_keyset_keypair(
         tink_proto::HashType::Sha512,
         tink_proto::EllipticCurveType::NistP521,
         tink_proto::OutputPrefixType::Tink,
         1,
     );
-    let pub_keys = vec![random_pub];
-    let pub_keyset = tink_tests::new_keyset(pub_keys[0].key_id, pub_keys);
-    let pub_keyset_handle = tink_core::keyset::insecure::new_handle(pub_keyset).unwrap();
-    let verifier =
-        tink_signature::new_verifier(&pub_keyset_handle).expect("getting verify primitive failed");
+    let other_pub_keys = vec![other_pub];
+    let other_pub_keyset = tink_tests::new_keyset(other_pub_keys[0].key_id, other_pub_keys);
+    let other_pub_keyset_handle =
+        tink_core::keyset::insecure::new_handle(other_pub_keyset).unwrap();
+    let other_verifier = tink_signature::new_verifier(&other_pub_keyset_handle)
+        .expect("getting verify primitive failed");
     assert!(
-        verifier.verify(&sig, &data).is_err(),
-        "verification with random key should fail"
+        other_verifier.verify(&sig, &data).is_err(),
+        "verification with other key should fail"
     );
 }
 
