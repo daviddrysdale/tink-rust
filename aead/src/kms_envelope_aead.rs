@@ -48,7 +48,7 @@ impl KmsEnvelopeAead {
 }
 
 impl tink_core::Aead for KmsEnvelopeAead {
-    fn encrypt(&self, pt: &[u8], aad: &[u8]) -> Result<Vec<u8>, TinkError> {
+    fn encrypt(&self, plaintext: &[u8], associated_data: &[u8]) -> Result<Vec<u8>, TinkError> {
         // Create a new key for each encryption operation.
         let dek = tink_core::registry::new_key(&self.dek_template)?;
         let encrypted_dek = self.remote.encrypt(&dek, &[])?;
@@ -57,19 +57,19 @@ impl tink_core::Aead for KmsEnvelopeAead {
             tink_core::Primitive::Aead(p) => p,
             _ => return Err("KmsEnvelopeAead: failed to convert AEAD primitive".into()),
         };
-        let payload = primitive.encrypt(pt, aad)?;
+        let payload = primitive.encrypt(plaintext, associated_data)?;
         build_cipher_text(&encrypted_dek, &payload)
     }
 
-    fn decrypt(&self, ct: &[u8], aad: &[u8]) -> Result<Vec<u8>, TinkError> {
+    fn decrypt(&self, ciphertext: &[u8], associated_data: &[u8]) -> Result<Vec<u8>, TinkError> {
         // Verify we have enough bytes for the length of the encrypted DEK.
-        if ct.len() <= LEN_DEK {
+        if ciphertext.len() <= LEN_DEK {
             return Err("KmsEnvelopeAead: invalid ciphertext".into());
         }
 
         // Extract length of encrypted DEK and advance past that length.
-        let ed = u32::from_be_bytes(ct[..LEN_DEK].try_into().unwrap()) as usize; // safe: checked above
-        let ct = &ct[LEN_DEK..];
+        let ed = u32::from_be_bytes(ciphertext[..LEN_DEK].try_into().unwrap()) as usize; // safe: checked above
+        let ct = &ciphertext[LEN_DEK..];
 
         // Verify we have enough bytes for the encrypted DEK.
         if ed == 0 || ct.len() < ed {
@@ -92,7 +92,7 @@ impl tink_core::Aead for KmsEnvelopeAead {
         };
 
         // Decrypt the payload.
-        primitive.decrypt(payload, aad)
+        primitive.decrypt(payload, associated_data)
     }
 }
 

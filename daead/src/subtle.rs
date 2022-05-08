@@ -25,7 +25,7 @@ const AES_BLOCK_SIZE: usize = 16;
 /// `AesSiv` is an implementation of AES-SIV-CMAC as defined in
 /// [RFC 5297](https://tools.ietf.org/html/rfc5297).
 ///
-/// `AesSiv` implements a deterministic encryption with additional data (i.e. the
+/// `AesSiv` implements a deterministic encryption with associated data (i.e. the
 /// `DeterministicAEAD` trait). Hence the implementation below is restricted
 /// to one AD component.
 ///
@@ -70,28 +70,28 @@ impl tink_core::DeterministicAead for AesSiv {
     fn encrypt_deterministically(
         &self,
         plaintext: &[u8],
-        additional_data: &[u8],
+        associated_data: &[u8],
     ) -> Result<Vec<u8>, TinkError> {
         if plaintext.len() > (isize::MAX as usize) - AES_BLOCK_SIZE {
             return Err("AesSiv: plaintext too long".into());
         }
         self.cipher
             .borrow_mut()
-            .encrypt(&[additional_data], plaintext)
+            .encrypt(&[associated_data], plaintext)
             .map_err(|e| wrap_err("AesSiv: encrypt failed", e))
     }
 
     fn decrypt_deterministically(
         &self,
         ciphertext: &[u8],
-        additional_data: &[u8],
+        associated_data: &[u8],
     ) -> Result<Vec<u8>, TinkError> {
         if ciphertext.len() < aes_siv::siv::IV_SIZE {
             return Err("AesSiv: ciphertext is too short".into());
         }
         self.cipher
             .borrow_mut()
-            .decrypt(&[additional_data], ciphertext)
+            .decrypt(&[associated_data], ciphertext)
             .map_err(|e| wrap_err("AesSiv: decrypt failed", e))
     }
 }

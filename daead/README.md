@@ -1,9 +1,9 @@
-# Tink-Rust: Deterministic Authenticated Encryption with Additional Data
+# Tink-Rust: Deterministic Authenticated Encryption with Associated Data
 
 [![Docs](https://img.shields.io/badge/docs-rust-brightgreen?style=for-the-badge)](https://docs.rs/tink-daead)
 ![MSRV](https://img.shields.io/badge/rustc-1.51+-yellow?style=for-the-badge)
 
-This crate provides deterministic authenticated encryption with additional data (DAEAD) functionality, as described in
+This crate provides deterministic authenticated encryption with associated data (DAEAD) functionality, as described in
 the upstream [Tink
 documentation](https://github.com/google/tink/blob/master/docs/PRIMITIVES.md#deterministic-authenticated-encryption-with-associated-data).
 

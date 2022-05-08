@@ -77,8 +77,8 @@ impl tink_core::registry::KeyManager for DummyAeadKeyManager {
 }
 
 /// Dummy implementation of [`tink_core::Aead`] trait. It "encrypts" data with a simple
-/// serialization capturing the dummy name, plaintext, and additional data, and "decrypts" it by
-/// reversing this and checking that the name and additional data match.
+/// serialization capturing the dummy name, plaintext, and associated data, and "decrypts" it by
+/// reversing this and checking that the name and associated data match.
 #[derive(Clone, Debug, Default)]
 pub struct DummyAead {
     pub name: String,
@@ -88,24 +88,24 @@ pub struct DummyAead {
 struct DummyAeadData {
     name: String,
     plaintext: Vec<u8>,
-    additional_data: Vec<u8>,
+    associated_data: Vec<u8>,
 }
 
 impl tink_core::Aead for DummyAead {
-    fn encrypt(&self, plaintext: &[u8], additional_data: &[u8]) -> Result<Vec<u8>, TinkError> {
+    fn encrypt(&self, plaintext: &[u8], associated_data: &[u8]) -> Result<Vec<u8>, TinkError> {
         serde_json::to_vec(&DummyAeadData {
             name: self.name.clone(),
             plaintext: plaintext.to_vec(),
-            additional_data: additional_data.to_vec(),
+            associated_data: associated_data.to_vec(),
         })
         .map_err(|e| wrap_err("dummy aead encrypt", e))
     }
 
-    fn decrypt(&self, ciphertext: &[u8], additional_data: &[u8]) -> Result<Vec<u8>, TinkError> {
+    fn decrypt(&self, ciphertext: &[u8], associated_data: &[u8]) -> Result<Vec<u8>, TinkError> {
         let data: DummyAeadData = serde_json::from_slice(ciphertext)
             .map_err(|e| wrap_err("dummy aeaed decrypt: invalid data", e))?;
-        if data.name != self.name || data.additional_data != additional_data {
-            Err("dummy aead encrypt: name/additional data mismatch".into())
+        if data.name != self.name || data.associated_data != associated_data {
+            Err("dummy aead encrypt: name/associated data mismatch".into())
         } else {
             Ok(data.plaintext)
         }

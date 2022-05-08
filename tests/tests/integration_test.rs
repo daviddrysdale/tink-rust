@@ -20,13 +20,13 @@ use tink_core::{subtle::random::get_random_bytes, Aead, Mac, Signer, Verifier};
 fn test_dummy_aead() {
     // try to encrypt/decrypt some data
     let data = vec![0, 1, 1, 2, 3, 5];
-    let additional_data = vec![3, 1, 4, 1, 5];
+    let associated_data = vec![3, 1, 4, 1, 5];
 
     let dummy = tink_tests::DummyAead {
         name: "name".to_owned(),
     };
-    let cipher = dummy.encrypt(&data, &additional_data).unwrap();
-    let decrypt = dummy.decrypt(&cipher, &additional_data).unwrap();
+    let cipher = dummy.encrypt(&data, &associated_data).unwrap();
+    let decrypt = dummy.decrypt(&cipher, &associated_data).unwrap();
     assert_eq!(data, decrypt);
 }
 

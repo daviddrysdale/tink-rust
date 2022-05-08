@@ -57,16 +57,19 @@ impl AesGcm {
 }
 
 impl tink_core::Aead for AesGcm {
-    /// Encrypt `pt` with `aad` as additional authenticated data.  The resulting ciphertext consists
+    /// Encrypt `plaintext` with `associated_data`.  The resulting ciphertext consists
     /// of two parts: (1) the IV used for encryption and (2) the actual ciphertext.
     ///
     /// Note: AES-GCM implementation of crypto library always returns ciphertext with 128-bit tag.
-    fn encrypt(&self, pt: &[u8], aad: &[u8]) -> Result<Vec<u8>, TinkError> {
-        if pt.len() > max_pt_size() {
+    fn encrypt(&self, plaintext: &[u8], associated_data: &[u8]) -> Result<Vec<u8>, TinkError> {
+        if plaintext.len() > max_pt_size() {
             return Err("AesGcm: plaintext too long".into());
         }
         let iv = new_iv();
-        let payload = Payload { msg: pt, aad };
+        let payload = Payload {
+            msg: plaintext,
+            aad: associated_data,
+        };
         let ct = match &self.key {
             AesGcmVariant::Aes128(key) => key.encrypt(&iv, payload),
             AesGcmVariant::Aes256(key) => key.encrypt(&iv, payload),
@@ -78,15 +81,15 @@ impl tink_core::Aead for AesGcm {
         Ok(ret)
     }
 
-    /// Decrypt `ct` with `aad` as the additional authenticated data.
-    fn decrypt(&self, ct: &[u8], aad: &[u8]) -> Result<Vec<u8>, TinkError> {
-        if ct.len() < AES_GCM_IV_SIZE + AES_GCM_TAG_SIZE {
+    /// Decrypt `ciphertext` with `associated_data`.
+    fn decrypt(&self, ciphertext: &[u8], associated_data: &[u8]) -> Result<Vec<u8>, TinkError> {
+        if ciphertext.len() < AES_GCM_IV_SIZE + AES_GCM_TAG_SIZE {
             return Err("AesGcm: ciphertext too short".into());
         }
-        let iv = GenericArray::from_slice(&ct[..AES_GCM_IV_SIZE]);
+        let iv = GenericArray::from_slice(&ciphertext[..AES_GCM_IV_SIZE]);
         let payload = Payload {
-            msg: &ct[AES_GCM_IV_SIZE..],
-            aad,
+            msg: &ciphertext[AES_GCM_IV_SIZE..],
+            aad: associated_data,
         };
         let pt = match &self.key {
             AesGcmVariant::Aes128(key) => key.decrypt(iv, payload),

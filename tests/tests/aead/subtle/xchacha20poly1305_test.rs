@@ -26,7 +26,7 @@ fn test_x_cha_cha20_poly1305_encrypt_decrypt() {
     for (i, test) in X_CHA_CHA20_POLY1305_TESTS.iter().enumerate() {
         let key = hex::decode(&test.key).unwrap();
         let pt = hex::decode(&test.plaintext).unwrap();
-        let aad = hex::decode(&test.aad).unwrap();
+        let ad = hex::decode(&test.ad).unwrap();
         let nonce = hex::decode(&test.nonce).unwrap();
         let out = hex::decode(&test.out).unwrap();
         let tag = hex::decode(&test.tag).unwrap();
@@ -38,7 +38,7 @@ fn test_x_cha_cha20_poly1305_encrypt_decrypt() {
             )
         });
 
-        x.encrypt(&pt, &aad)
+        x.encrypt(&pt, &ad)
             .unwrap_or_else(|e| panic!("#{}, unexpected encryption error: {:?}", i, e));
 
         let mut combined_ct = Vec::new();
@@ -46,7 +46,7 @@ fn test_x_cha_cha20_poly1305_encrypt_decrypt() {
         combined_ct.extend_from_slice(&out);
         combined_ct.extend_from_slice(&tag);
         let got = x
-            .decrypt(&combined_ct, &aad)
+            .decrypt(&combined_ct, &ad)
             .unwrap_or_else(|e| panic!("#{}, unexpected decryption error: {}", i, e));
         assert_eq!(
             pt,
@@ -62,28 +62,28 @@ fn test_x_cha_cha20_poly1305_encrypt_decrypt() {
 #[test]
 fn test_x_cha_cha20_poly1305_empty_associated_data() {
     let key = get_random_bytes(subtle::CHA_CHA20_KEY_SIZE);
-    let aad = &[];
-    let bad_aad = &[1, 2, 3];
+    let empty_ad = &[];
+    let bad_ad = &[1, 2, 3];
 
     let ca = subtle::XChaCha20Poly1305::new(&key).unwrap();
 
     for i in 0..75 {
         let pt = get_random_bytes(i);
-        // Encrypting with aad as a 0-length slice
+        // Encrypting with associated_data as a 0-length slice
         {
-            let ct = ca.encrypt(&pt, aad).unwrap_or_else(|e| {
+            let ct = ca.encrypt(&pt, empty_ad).unwrap_or_else(|e| {
                 panic!(
                     "encrypt({}, {}) failed: {:?}",
                     hex::encode(&pt),
-                    hex::encode(aad),
+                    hex::encode(empty_ad),
                     e
                 )
             });
-            let got = ca.decrypt(&ct, aad).unwrap_or_else(|e| {
+            let got = ca.decrypt(&ct, empty_ad).unwrap_or_else(|e| {
                 panic!(
                     "decrypt(encrypt({}, {})) failed: {:?}",
                     hex::encode(&pt),
-                    hex::encode(aad),
+                    hex::encode(empty_ad),
                     e
                 )
             });
@@ -91,7 +91,7 @@ fn test_x_cha_cha20_poly1305_empty_associated_data() {
                 pt,
                 got,
                 "decrypt(encrypt(pt, {})): plaintext's don't match",
-                hex::encode(aad)
+                hex::encode(empty_ad)
             );
         }
         let ct = ca
@@ -109,9 +109,9 @@ fn test_x_cha_cha20_poly1305_empty_associated_data() {
             "decrypt(encrypt(pt, &[])): plaintext's don't match"
         );
         assert!(
-            ca.decrypt(&ct, bad_aad).is_err(),
-            "decrypt(encrypt(pt, bad_aad={})) unexpectedly Ok",
-            hex::encode(bad_aad)
+            ca.decrypt(&ct, bad_ad).is_err(),
+            "decrypt(encrypt(pt, bad_ad={})) unexpectedly Ok",
+            hex::encode(bad_ad)
         );
     }
 }
@@ -122,25 +122,25 @@ fn test_x_cha_cha20_poly1305_long_messages() {
     // Encrypts and decrypts messages of size <= 8192.
     while data_size <= 1 << 24 {
         let pt = get_random_bytes(data_size);
-        let aad = get_random_bytes(data_size / 3);
+        let ad = get_random_bytes(data_size / 3);
         let key = get_random_bytes(subtle::CHA_CHA20_KEY_SIZE);
 
         let ca = subtle::XChaCha20Poly1305::new(&key).unwrap();
 
-        let ct = ca.encrypt(&pt, &aad).unwrap_or_else(|e| {
+        let ct = ca.encrypt(&pt, &ad).unwrap_or_else(|e| {
             panic!(
                 "encrypt({}, {}) failed: {:?}",
                 hex::encode(&pt),
-                hex::encode(&aad),
+                hex::encode(&ad),
                 e
             )
         });
-        let got = ca.decrypt(&ct, &aad).expect("decrypt() failed");
+        let got = ca.decrypt(&ct, &ad).expect("decrypt() failed");
         assert_eq!(
             pt,
             got,
             "decrypt(encrypt(pt, {})): plaintext's don't match",
-            hex::encode(&aad)
+            hex::encode(&ad)
         );
 
         data_size += 9 * data_size / 11;
@@ -164,29 +164,29 @@ fn test_x_cha_cha20_poly1305_modify_ciphertext() {
     for (i, test) in X_CHA_CHA20_POLY1305_TESTS.iter().enumerate() {
         let key = hex::decode(&test.key).unwrap();
         let pt = hex::decode(&test.plaintext).unwrap();
-        let mut aad = hex::decode(&test.aad).unwrap();
+        let mut ad = hex::decode(&test.ad).unwrap();
 
         let ca = subtle::XChaCha20Poly1305::new(&key).unwrap();
 
         let mut ct = ca
-            .encrypt(&pt, &aad)
+            .encrypt(&pt, &ad)
             .unwrap_or_else(|e| panic!("#{}: encrypt failed: {:?}", i, e));
 
-        if !aad.is_empty() {
-            let alter_aad_idx = thread_rng().gen_range(0, aad.len());
-            aad[alter_aad_idx] ^= 0x80;
+        if !ad.is_empty() {
+            let altered_index = thread_rng().gen_range(0, ad.len());
+            ad[altered_index] ^= 0x80;
             assert!(
-                ca.decrypt(&ct, &aad).is_err(),
-                "#{}: Decrypt was successful after altering additional data",
+                ca.decrypt(&ct, &ad).is_err(),
+                "#{}: Decrypt was successful after altering associated data",
                 i
             );
-            aad[alter_aad_idx] ^= 0x80;
+            ad[altered_index] ^= 0x80;
         }
 
         let alter_ct_idx = thread_rng().gen_range(0, ct.len());
         ct[alter_ct_idx] ^= 0x80;
         assert!(
-            ca.decrypt(&ct, &aad).is_err(),
+            ca.decrypt(&ct, &ad).is_err(),
             "#{}: Decrypt was successful after altering ciphertext",
             i
         );
@@ -203,9 +203,9 @@ fn test_x_cha_cha20_poly1305_random_nonce() {
 
     let mut cts = HashSet::new();
     let pt = &[];
-    let aad = &[];
+    let ad = &[];
     for _ in 0..1 << 10 {
-        let ct = ca.encrypt(pt, aad).expect("test random nonce failed");
+        let ct = ca.encrypt(pt, ad).expect("test random nonce failed");
         let ct_hex = hex::encode(&ct);
         assert!(!cts.contains(&ct_hex), "duplicate ciphertext {}", ct_hex);
         cts.insert(ct_hex);

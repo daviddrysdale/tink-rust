@@ -55,20 +55,24 @@ impl AesGcmSiv {
 }
 
 impl tink_core::Aead for AesGcmSiv {
-    /// Encrypt `pt` with `aad` as additional authenticated data.
+    /// Encrypt `plaintext` with `associated_data`.
     ///
     /// The resulting ciphertext consists of two parts: (1) the IV used for encryption and (2) the
     /// actual ciphertext (which itself is built of two parts, the inner ciphertext followed by
     /// an authentication tag).
-    fn encrypt(&self, pt: &[u8], aad: &[u8]) -> Result<Vec<u8>, TinkError> {
-        if pt.len() > ((isize::MAX as usize) - AES_GCM_SIV_NONCE_SIZE - AES_GCM_SIV_TAG_SIZE) {
+    fn encrypt(&self, plaintext: &[u8], associated_data: &[u8]) -> Result<Vec<u8>, TinkError> {
+        if plaintext.len() > ((isize::MAX as usize) - AES_GCM_SIV_NONCE_SIZE - AES_GCM_SIV_TAG_SIZE)
+        {
             return Err("AesGcmSiv: plaintext too long".into());
         }
-        if aad.len() > (isize::MAX as usize) {
-            return Err("AesGcmSiv: additional-data too long".into());
+        if associated_data.len() > (isize::MAX as usize) {
+            return Err("AesGcmSiv: associated-data too long".into());
         }
         let iv = new_iv();
-        let payload = Payload { msg: pt, aad };
+        let payload = Payload {
+            msg: plaintext,
+            aad: associated_data,
+        };
         let ct = match &self.key {
             AesGcmSivVariant::Aes128(key) => key.encrypt(&iv, payload),
             AesGcmSivVariant::Aes256(key) => key.encrypt(&iv, payload),
@@ -80,22 +84,22 @@ impl tink_core::Aead for AesGcmSiv {
         Ok(ret)
     }
 
-    /// Decrypt `ct` with `aad` as the additional authenticated data.
-    fn decrypt(&self, ct: &[u8], aad: &[u8]) -> Result<Vec<u8>, TinkError> {
-        if ct.len() < AES_GCM_SIV_NONCE_SIZE + AES_GCM_SIV_TAG_SIZE {
+    /// Decrypt `ciphertext` with `associated_data`.
+    fn decrypt(&self, ciphertext: &[u8], associated_data: &[u8]) -> Result<Vec<u8>, TinkError> {
+        if ciphertext.len() < AES_GCM_SIV_NONCE_SIZE + AES_GCM_SIV_TAG_SIZE {
             return Err("AesGcmSiv: ciphertext too short".into());
         }
-        if ct.len() > (isize::MAX as usize) {
+        if ciphertext.len() > (isize::MAX as usize) {
             return Err("AesGcmSiv: ciphertext too long".into());
         }
-        if aad.len() > (isize::MAX as usize) {
-            return Err("AesGcmSiv: additional-data too long".into());
+        if associated_data.len() > (isize::MAX as usize) {
+            return Err("AesGcmSiv: associated-data too long".into());
         }
 
-        let iv = GenericArray::from_slice(&ct[..AES_GCM_SIV_NONCE_SIZE]);
+        let iv = GenericArray::from_slice(&ciphertext[..AES_GCM_SIV_NONCE_SIZE]);
         let payload = Payload {
-            msg: &ct[AES_GCM_SIV_NONCE_SIZE..],
-            aad,
+            msg: &ciphertext[AES_GCM_SIV_NONCE_SIZE..],
+            aad: associated_data,
         };
         let pt = match &self.key {
             AesGcmSivVariant::Aes128(key) => key.decrypt(iv, payload),

@@ -55,7 +55,7 @@ fn test_aes_siv_empty_plaintext() {
 }
 
 #[test]
-fn test_aes_siv_empty_additional_data() {
+fn test_aes_siv_empty_associated_data() {
     let key_str =
         "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f00112233445566778899aabbccddeefff0f1f2f3f4f5f6f7f8f9fafbfcfdfeff";
     let key = hex::decode(key_str).unwrap();
@@ -125,7 +125,7 @@ fn test_aes_siv_message_sizes() {
 }
 
 #[test]
-fn test_aes_siv_additional_data_sizes() {
+fn test_aes_siv_associated_data_sizes() {
     let key_str =
         "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f00112233445566778899aabbccddeefff0f1f2f3f4f5f6f7f8f9fafbfcfdfeff";
     let key = hex::decode(key_str).unwrap();

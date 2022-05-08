@@ -38,22 +38,22 @@
 /// - [RFC 5116](https://tools.ietf.org/html/rfc5116)
 /// - [RFC 5297 s1.3](https://tools.ietf.org/html/rfc5297#section-1.3)
 pub trait DeterministicAead: DeterministicAeadBoxClone {
-    /// Deterministical encrypt plaintext with `additional_data` as additional authenticated data.
-    /// The resulting ciphertext allows for checking authenticity and integrity of additional
-    /// data `additional_data`, but there are no guarantees wrt. secrecy of that data.
+    /// Deterministical encrypt plaintext with `associated_data` as associated authenticated data.
+    /// The resulting ciphertext allows for checking authenticity and integrity of associated
+    /// data `associated_data`, but there are no guarantees wrt. secrecy of that data.
     fn encrypt_deterministically(
         &self,
         plaintext: &[u8],
-        additional_data: &[u8],
+        associated_data: &[u8],
     ) -> Result<Vec<u8>, crate::TinkError>;
 
-    /// Deterministically decrypt ciphertext with `additional_data` as
-    /// additional authenticated data. The decryption verifies the authenticity and integrity
-    /// of the additional data, but there are no guarantees wrt. secrecy of that data.
+    /// Deterministically decrypt ciphertext with `associated_data` as
+    /// associated authenticated data. The decryption verifies the authenticity and integrity
+    /// of the associated data, but there are no guarantees wrt. secrecy of that data.
     fn decrypt_deterministically(
         &self,
         ciphertext: &[u8],
-        additional_data: &[u8],
+        associated_data: &[u8],
     ) -> Result<Vec<u8>, crate::TinkError>;
 }
 

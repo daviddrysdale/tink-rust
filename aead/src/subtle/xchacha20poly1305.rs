@@ -47,17 +47,23 @@ impl XChaCha20Poly1305 {
 }
 
 impl tink_core::Aead for XChaCha20Poly1305 {
-    /// Encrypt `pt` with `aad` as additional
-    /// authenticated data. The resulting ciphertext consists of two parts:
+    /// Encrypt `pt` with `associated_data`.
+    /// The resulting ciphertext consists of two parts:
     /// (1) the nonce used for encryption and (2) the actual ciphertext.
-    fn encrypt(&self, pt: &[u8], aad: &[u8]) -> Result<Vec<u8>, TinkError> {
-        if pt.len() > (isize::MAX as usize) - X_CHA_CHA20_NONCE_SIZE - POLY1305_TAG_SIZE {
+    fn encrypt(&self, plaintext: &[u8], associated_data: &[u8]) -> Result<Vec<u8>, TinkError> {
+        if plaintext.len() > (isize::MAX as usize) - X_CHA_CHA20_NONCE_SIZE - POLY1305_TAG_SIZE {
             return Err("XChaCha20Poly1305: plaintext too long".into());
         }
         let cipher = chacha20poly1305::XChaCha20Poly1305::new(&self.key);
         let n = new_nonce();
         let ct = cipher
-            .encrypt(&n, Payload { msg: pt, aad })
+            .encrypt(
+                &n,
+                Payload {
+                    msg: plaintext,
+                    aad: associated_data,
+                },
+            )
             .map_err(|e| wrap_err("XChaCha20Poly1305", e))?;
 
         let mut ret = Vec::with_capacity(n.len() + ct.len());
@@ -66,20 +72,20 @@ impl tink_core::Aead for XChaCha20Poly1305 {
         Ok(ret)
     }
 
-    /// Decrypt `ct` with `aad` as the additional authenticated data.
-    fn decrypt(&self, ct: &[u8], aad: &[u8]) -> Result<Vec<u8>, TinkError> {
-        if ct.len() < X_CHA_CHA20_NONCE_SIZE + POLY1305_TAG_SIZE {
+    /// Decrypt `ciphertext` with `associated_data`.
+    fn decrypt(&self, ciphertext: &[u8], associated_data: &[u8]) -> Result<Vec<u8>, TinkError> {
+        if ciphertext.len() < X_CHA_CHA20_NONCE_SIZE + POLY1305_TAG_SIZE {
             return Err("XChaCha20Poly1305: ciphertext too short".into());
         }
 
         let cipher = chacha20poly1305::XChaCha20Poly1305::new(&self.key);
-        let n = chacha20poly1305::XNonce::from_slice(&ct[..X_CHA_CHA20_NONCE_SIZE]);
+        let n = chacha20poly1305::XNonce::from_slice(&ciphertext[..X_CHA_CHA20_NONCE_SIZE]);
         cipher
             .decrypt(
                 n,
                 Payload {
-                    msg: &ct[X_CHA_CHA20_NONCE_SIZE..],
-                    aad,
+                    msg: &ciphertext[X_CHA_CHA20_NONCE_SIZE..],
+                    aad: associated_data,
                 },
             )
             .map_err(|e| wrap_err("XChaCha20Poly1305", e))

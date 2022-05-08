@@ -142,7 +142,7 @@ fn test_aes_gcm_siv_modify_ciphertext() {
             i
         ));
     }
-    // modify additional authenticated data
+    // modify associated data
     for i in 0..ad.len() {
         let tmp = ad[i];
         for j in 0..8 {

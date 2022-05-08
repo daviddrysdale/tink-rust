@@ -20,8 +20,8 @@ use super::IndCpaCipher;
 use tink_core::{utils::wrap_err, TinkError};
 
 /// `EncryptThenAuthenticate` performs an encrypt-then-MAC operation on plaintext
-/// and additional authenticated data (aad). The MAC is computed over (aad ||
-/// ciphertext || size of aad). This implementation is based on
+/// and associated data (aad). The MAC is computed over (ad ||
+/// ciphertext || size of ad). This implementation is based on
 /// <http://tools.ietf.org/html/draft-mcgrew-aead-aes-cbc-hmac-sha2-05>.
 pub struct EncryptThenAuthenticate {
     ind_cpa_cipher: Box<dyn IndCpaCipher>,
@@ -62,27 +62,27 @@ impl EncryptThenAuthenticate {
 }
 
 impl tink_core::Aead for EncryptThenAuthenticate {
-    /// Encrypt `plaintext` with `additional_data` as additional authenticated
-    /// data. The resulting ciphertext allows for checking authenticity and
-    /// integrity of additional data, but does not guarantee its secrecy.
+    /// Encrypt `plaintext` with `associated_data`.
+    /// The resulting ciphertext allows for checking authenticity and
+    /// integrity of associated data, but does not guarantee its secrecy.
     ///
     /// The plaintext is encrypted with an [`IndCpaCipher`], then MAC is computed over
-    /// (additional_data || ciphertext || n) where n is additional_data's length
+    /// (associated_data || ciphertext || n) where n is associated_data's length
     /// in bits represented as a 64-bit bigendian unsigned integer. The final
     /// ciphertext format is (IND-CPA ciphertext || mac).
-    fn encrypt(&self, plaintext: &[u8], additional_data: &[u8]) -> Result<Vec<u8>, TinkError> {
+    fn encrypt(&self, plaintext: &[u8], associated_data: &[u8]) -> Result<Vec<u8>, TinkError> {
         let mut ciphertext = self
             .ind_cpa_cipher
             .encrypt(plaintext)
             .map_err(|e| wrap_err("EncryptThenAuthenticate", e))?;
 
         // Authenticate the following data:
-        // additional_data || payload || aad_size_in_bits
-        let mut to_auth_data = Vec::with_capacity(additional_data.len() + ciphertext.len() + 8);
-        to_auth_data.extend_from_slice(additional_data);
+        // associated_data || payload || aad_size_in_bits
+        let mut to_auth_data = Vec::with_capacity(associated_data.len() + ciphertext.len() + 8);
+        to_auth_data.extend_from_slice(associated_data);
         to_auth_data.extend_from_slice(&ciphertext);
-        let aad_size_in_bits = (additional_data.len() * 8) as u64;
-        to_auth_data.extend_from_slice(&aad_size_in_bits.to_be_bytes());
+        let ad_size_in_bits = (associated_data.len() * 8) as u64;
+        to_auth_data.extend_from_slice(&ad_size_in_bits.to_be_bytes());
 
         let tag = self
             .mac
@@ -97,9 +97,8 @@ impl tink_core::Aead for EncryptThenAuthenticate {
         Ok(ciphertext)
     }
 
-    /// Decrypt `ciphertext` with `additional_data` as additional authenticated
-    /// data.
-    fn decrypt(&self, ciphertext: &[u8], additional_data: &[u8]) -> Result<Vec<u8>, TinkError> {
+    /// Decrypt `ciphertext` with `associated_data`.
+    fn decrypt(&self, ciphertext: &[u8], associated_data: &[u8]) -> Result<Vec<u8>, TinkError> {
         if ciphertext.len() < self.tag_size {
             return Err("EncryptThenAuthenticate: ciphertext too short".into());
         }
@@ -108,12 +107,12 @@ impl tink_core::Aead for EncryptThenAuthenticate {
         let payload = &ciphertext[..(ciphertext.len() - self.tag_size)];
 
         // Authenticate the following data:
-        // additional_data || payload || aad_size_in_bits
-        let mut to_auth_data = Vec::with_capacity(additional_data.len() + payload.len() + 8);
-        to_auth_data.extend_from_slice(additional_data);
+        // associated_data || payload || aad_size_in_bits
+        let mut to_auth_data = Vec::with_capacity(associated_data.len() + payload.len() + 8);
+        to_auth_data.extend_from_slice(associated_data);
         to_auth_data.extend_from_slice(payload);
-        let aad_size_in_bits = (additional_data.len() * 8) as u64;
-        to_auth_data.extend_from_slice(&aad_size_in_bits.to_be_bytes());
+        let ad_size_in_bits = (associated_data.len() * 8) as u64;
+        to_auth_data.extend_from_slice(&ad_size_in_bits.to_be_bytes());
 
         // Verify against the tag at the end of the ciphertext.
         self.mac

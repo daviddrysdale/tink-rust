@@ -14,31 +14,31 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-//! Authenticated encryption with additional authenticated data.
+//! Authenticated encryption with associated authenticated data.
 
-/// `Aead` is the interface for authenticated encryption with additional authenticated data.
+/// `Aead` is the interface for authenticated encryption with associated data.
 ///
 /// Implementations of this trait are secure against adaptive chosen ciphertext attacks.
-/// Encryption with additional data ensures authenticity and integrity of that data, but not
+/// Encryption with associated data ensures authenticity and integrity of that data, but not
 /// its secrecy (see [RFC 5116](https://tools.ietf.org/html/rfc5116)).
 pub trait Aead: AeadBoxClone {
-    /// Encrypt plaintext with `additional_data` as additional
-    /// authenticated data. The resulting ciphertext allows for checking
-    /// authenticity and integrity of additional data `additional_data`,
+    /// Encrypt plaintext with `associated_data` as associated data.
+    /// The resulting ciphertext allows for checking
+    /// authenticity and integrity of associated data `associated_data`,
     /// but there are no guarantees wrt. secrecy of that data.
     fn encrypt(
         &self,
         plaintext: &[u8],
-        additional_data: &[u8],
+        associated_data: &[u8],
     ) -> Result<Vec<u8>, crate::TinkError>;
 
-    /// Decrypt ciphertext with `additional_data` as additional
-    /// authenticated data. The decryption verifies the authenticity and integrity
-    /// of the additional data, but there are no guarantees wrt. secrecy of that data.
+    /// Decrypt ciphertext with `associated_data` as associated data.
+    /// The decryption verifies the authenticity and integrity
+    /// of the associated data, but there are no guarantees wrt. secrecy of that data.
     fn decrypt(
         &self,
         ciphertext: &[u8],
-        additional_data: &[u8],
+        associated_data: &[u8],
     ) -> Result<Vec<u8>, crate::TinkError>;
 }
 

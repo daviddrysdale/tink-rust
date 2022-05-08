@@ -176,12 +176,12 @@ impl tink_core::Aead for GcpAead {
     fn encrypt(
         &self,
         plaintext: &[u8],
-        additional_data: &[u8],
+        associated_data: &[u8],
     ) -> Result<Vec<u8>, tink_core::TinkError> {
         let req = EncryptRequest {
             plaintext: Some(base64::encode_config(plaintext, base64::URL_SAFE)),
             additional_authenticated_data: Some(base64::encode_config(
-                additional_data,
+                associated_data,
                 base64::URL_SAFE,
             )),
             ..EncryptRequest::default()
@@ -202,12 +202,12 @@ impl tink_core::Aead for GcpAead {
     fn decrypt(
         &self,
         ciphertext: &[u8],
-        additional_data: &[u8],
+        associated_data: &[u8],
     ) -> Result<Vec<u8>, tink_core::TinkError> {
         let req = DecryptRequest {
             ciphertext: Some(base64::encode_config(ciphertext, base64::URL_SAFE)),
             additional_authenticated_data: Some(base64::encode_config(
-                additional_data,
+                associated_data,
                 base64::URL_SAFE,
             )),
             ..DecryptRequest::default()

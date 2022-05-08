@@ -69,14 +69,14 @@ impl WrappedAead {
 }
 
 impl tink_core::Aead for WrappedAead {
-    fn encrypt(&self, pt: &[u8], aad: &[u8]) -> Result<Vec<u8>, TinkError> {
+    fn encrypt(&self, plaintext: &[u8], associated_data: &[u8]) -> Result<Vec<u8>, TinkError> {
         let primary = self
             .ps
             .primary
             .as_ref()
             .ok_or_else(|| TinkError::new("no primary"))?;
 
-        let ct = primary.primitive.encrypt(pt, aad)?;
+        let ct = primary.primitive.encrypt(plaintext, associated_data)?;
 
         let mut ret = Vec::with_capacity(primary.prefix.len() + ct.len());
         ret.extend_from_slice(&primary.prefix);
@@ -84,15 +84,15 @@ impl tink_core::Aead for WrappedAead {
         Ok(ret)
     }
 
-    fn decrypt(&self, ct: &[u8], aad: &[u8]) -> Result<Vec<u8>, TinkError> {
+    fn decrypt(&self, ciphertext: &[u8], associated_data: &[u8]) -> Result<Vec<u8>, TinkError> {
         // try non-raw keys
         let prefix_size = tink_core::cryptofmt::NON_RAW_PREFIX_SIZE;
-        if ct.len() > prefix_size {
-            let prefix = &ct[..prefix_size];
-            let ct_no_prefix = &ct[prefix_size..];
+        if ciphertext.len() > prefix_size {
+            let prefix = &ciphertext[..prefix_size];
+            let ct_no_prefix = &ciphertext[prefix_size..];
             if let Some(entries) = self.ps.entries_for_prefix(prefix) {
                 for entry in entries {
-                    if let Ok(pt) = entry.primitive.decrypt(ct_no_prefix, aad) {
+                    if let Ok(pt) = entry.primitive.decrypt(ct_no_prefix, associated_data) {
                         return Ok(pt);
                     }
                 }
@@ -102,7 +102,7 @@ impl tink_core::Aead for WrappedAead {
         // try raw keys
         if let Some(entries) = self.ps.raw_entries() {
             for entry in entries {
-                if let Ok(pt) = entry.primitive.decrypt(ct, aad) {
+                if let Ok(pt) = entry.primitive.decrypt(ciphertext, associated_data) {
                     return Ok(pt);
                 }
             }

@@ -57,9 +57,9 @@ impl tink_core::Aead for AwsAead {
     fn encrypt(
         &self,
         plaintext: &[u8],
-        additional_data: &[u8],
+        associated_data: &[u8],
     ) -> Result<Vec<u8>, tink_core::TinkError> {
-        let ad = hex::encode(additional_data);
+        let ad = hex::encode(associated_data);
         let encryption_context = if ad.is_empty() {
             None
         } else {
@@ -97,9 +97,9 @@ impl tink_core::Aead for AwsAead {
     fn decrypt(
         &self,
         ciphertext: &[u8],
-        additional_data: &[u8],
+        associated_data: &[u8],
     ) -> Result<Vec<u8>, tink_core::TinkError> {
-        let ad = hex::encode(additional_data);
+        let ad = hex::encode(associated_data);
         let encryption_context = if ad.is_empty() {
             None
         } else {

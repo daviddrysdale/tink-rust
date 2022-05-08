@@ -39,7 +39,7 @@ Individual cryptographic primitives are implemented in `tink-<primitive>` crates
 - the `tink-proto` crate for protobuf-derived `struct`s
 - the RustCrypto crates to provide underlying cryptographic implementations.
 
-For example, the `tink-aead` crate provides code that performs authenticated encryption with additional data (AEAD),
+For example, the `tink-aead` crate provides code that performs authenticated encryption with associated data (AEAD),
 implementing the `Aead` trait from `tink-core`.
 
 All of the tests for the Tink crates are integration tests (i.e. only use public APIs) and reside in a separate
