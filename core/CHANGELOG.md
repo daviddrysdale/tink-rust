@@ -3,6 +3,7 @@
 ## 0.3.0 - TBD
 
 - Deprecate `tink_core::keyset::Manager::rotate` (prefer `Manager::add`).
+- Add `type_url` field / param to `primitiveset::PrimitiveSet` (breaking change)
 
 ## 0.2.3 - 2022-01-03
 

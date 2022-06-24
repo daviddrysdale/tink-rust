@@ -32,6 +32,7 @@ pub struct Entry {
     pub prefix: Vec<u8>,
     pub prefix_type: tink_proto::OutputPrefixType,
     pub status: tink_proto::KeyStatusType,
+    pub type_url: String,
 }
 
 impl Entry {
@@ -41,6 +42,7 @@ impl Entry {
         prefix: &[u8],
         prefix_type: tink_proto::OutputPrefixType,
         status: tink_proto::KeyStatusType,
+        type_url: &str,
     ) -> Self {
         Entry {
             key_id,
@@ -48,6 +50,7 @@ impl Entry {
             prefix: prefix.to_vec(),
             prefix_type,
             status,
+            type_url: type_url.to_string(),
         }
     }
 }
@@ -102,8 +105,12 @@ impl PrimitiveSet {
         p: crate::Primitive,
         key: &tink_proto::keyset::Key,
     ) -> Result<Entry, TinkError> {
+        let key_data = key
+            .key_data
+            .as_ref()
+            .ok_or_else(|| TinkError::new("PrimitiveSet::new: key_data must not be None"))?;
         if key.status != tink_proto::KeyStatusType::Enabled as i32 {
-            return Err("The key must be ENABLED".into());
+            return Err("PrimitiveSet::new: the key must be ENABLED".into());
         }
         let prefix =
             crate::cryptofmt::output_prefix(key).map_err(|e| wrap_err("primitiveset", e))?;
@@ -115,6 +122,7 @@ impl PrimitiveSet {
                 .ok_or_else(|| TinkError::new("invalid key prefix type"))?,
             tink_proto::KeyStatusType::from_i32(key.status)
                 .ok_or_else(|| TinkError::new("invalid key status"))?,
+            &key_data.type_url,
         );
         let retval = entry.clone();
         match self.entries.entry(prefix) {
@@ -135,6 +143,7 @@ pub struct TypedEntry<P: From<crate::Primitive>> {
     pub prefix: Vec<u8>,
     pub prefix_type: tink_proto::OutputPrefixType,
     pub status: tink_proto::KeyStatusType,
+    pub type_url: String,
 }
 
 impl<P: From<crate::Primitive>> From<Entry> for TypedEntry<P> {
@@ -145,6 +154,7 @@ impl<P: From<crate::Primitive>> From<Entry> for TypedEntry<P> {
             prefix: entry.prefix,
             prefix_type: entry.prefix_type,
             status: entry.status,
+            type_url: entry.type_url,
         }
     }
 }
@@ -215,6 +225,7 @@ impl Clone for TypedEntry<Box<dyn crate::Aead>> {
             prefix: self.prefix.clone(),
             prefix_type: self.prefix_type,
             status: self.status,
+            type_url: self.type_url.clone(),
         }
     }
 }
@@ -226,6 +237,7 @@ impl Clone for TypedEntry<Box<dyn crate::DeterministicAead>> {
             prefix: self.prefix.clone(),
             prefix_type: self.prefix_type,
             status: self.status,
+            type_url: self.type_url.clone(),
         }
     }
 }
@@ -237,6 +249,7 @@ impl Clone for TypedEntry<Box<dyn crate::HybridDecrypt>> {
             prefix: self.prefix.clone(),
             prefix_type: self.prefix_type,
             status: self.status,
+            type_url: self.type_url.clone(),
         }
     }
 }
@@ -248,6 +261,7 @@ impl Clone for TypedEntry<Box<dyn crate::HybridEncrypt>> {
             prefix: self.prefix.clone(),
             prefix_type: self.prefix_type,
             status: self.status,
+            type_url: self.type_url.clone(),
         }
     }
 }
@@ -259,6 +273,7 @@ impl Clone for TypedEntry<Box<dyn crate::Mac>> {
             prefix: self.prefix.clone(),
             prefix_type: self.prefix_type,
             status: self.status,
+            type_url: self.type_url.clone(),
         }
     }
 }
@@ -270,6 +285,7 @@ impl Clone for TypedEntry<Box<dyn crate::Signer>> {
             prefix: self.prefix.clone(),
             prefix_type: self.prefix_type,
             status: self.status,
+            type_url: self.type_url.clone(),
         }
     }
 }
@@ -281,6 +297,7 @@ impl Clone for TypedEntry<Box<dyn crate::StreamingAead>> {
             prefix: self.prefix.clone(),
             prefix_type: self.prefix_type,
             status: self.status,
+            type_url: self.type_url.clone(),
         }
     }
 }
@@ -292,6 +309,7 @@ impl Clone for TypedEntry<Box<dyn crate::Verifier>> {
             prefix: self.prefix.clone(),
             prefix_type: self.prefix_type,
             status: self.status,
+            type_url: self.type_url.clone(),
         }
     }
 }
